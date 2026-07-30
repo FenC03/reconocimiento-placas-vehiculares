@@ -1,2 +1,8 @@
-opencv-python==4.10.0.84
 ultralytics>=8.2.0
+torch>=2.2.0
+opencv-python>=4.9.0
+pytesseract>=0.3.10
+numpy>=1.24.0
+pillow>=10.0.0
+matplotlib>=3.8.0
+
