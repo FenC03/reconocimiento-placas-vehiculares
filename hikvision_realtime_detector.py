@@ -111,6 +111,14 @@ TESSERACT_CONFIG = (
     "-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
 )
 
+# Factor de escala UNIFORME aplicado al ROI antes del preprocesamiento OCR
+# (mismo factor en ancho y alto, para no distorsionar la proporcion original
+# de la placa).
+FACTOR_ESCALA_ROI = 15
+
+# Angulo fijo de correccion de inclinacion, en grados (positivo = antihorario).
+ANGULO_ROTACION = 3
+
 
 # ============================ UTILIDADES DE RUTAS =============================
 
@@ -180,15 +188,40 @@ def recortar_roi(imagen, bbox):
     return imagen[y1:y2, x1:x2]
 
 
+def redimensionar_roi(roi, factor: int = FACTOR_ESCALA_ROI):
+    """
+    Escala el ROI aplicando el MISMO factor a ancho y alto, para agrandar
+    los caracteres antes del preprocesamiento sin distorsionar la
+    proporcion original de la placa.
+    """
+    ancho = int(roi.shape[1] * factor)
+    alto = int(roi.shape[0] * factor)
+    return cv2.resize(roi, (ancho, alto), interpolation=cv2.INTER_LANCZOS4)
+
+
+def rotar_imagen(imagen, angulo: float = ANGULO_ROTACION):
+    """
+    Rota la imagen un angulo fijo (en grados, positivo = antihorario)
+    alrededor de su centro, para corregir la inclinacion tipica con la
+    que la camara HikVision capta la placa.
+    """
+    alto, ancho = imagen.shape[:2]
+    centro = (ancho // 2, alto // 2)
+    matriz = cv2.getRotationMatrix2D(centro, angulo, 1.0)
+    return cv2.warpAffine(imagen, matriz, (ancho, alto))
+
+
 def preprocesar_meesad_thumthong(roi):
     """
-    Pipeline de Meesad & Thumthong (2025): escala de grises ->
-    denoising (mediana + gaussiano) -> ecualizacion de histograma ->
-    binarizacion Otsu.
+    Pipeline de Meesad & Thumthong (2025): redimension uniforme ->
+    escala de grises -> denoising (mediana + gaussiano) -> ecualizacion
+    de histograma -> binarizacion Otsu -> correccion de inclinacion.
     """
-    gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    redimensionado = redimensionar_roi(roi)
 
-    denoised = cv2.medianBlur(gris, 3)
+    gris = cv2.cvtColor(redimensionado, cv2.COLOR_BGR2GRAY)
+
+    denoised = cv2.medianBlur(gris, 15)
     denoised = cv2.GaussianBlur(denoised, (3, 3), 0)
 
     contrastada = cv2.equalizeHist(denoised)
@@ -197,7 +230,9 @@ def preprocesar_meesad_thumthong(roi):
         contrastada, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
     )
 
-    return binaria
+    rotada = rotar_imagen(binaria)
+
+    return rotada
 
 
 def extraer_texto_placa(imagen_procesada):
