@@ -5,4 +5,4 @@ pytesseract>=0.3.10
 numpy>=1.24.0
 pillow>=10.0.0
 matplotlib>=3.8.0
-
+intel-openmp

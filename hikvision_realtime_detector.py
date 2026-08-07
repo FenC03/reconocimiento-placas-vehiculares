@@ -70,13 +70,13 @@ except ImportError:
 RTSP_URL = "rtsp://admin:Hik12345@172.16.9.115:554/Streaming/Channels/101"
 
 # Ruta al modelo YOLOv8 entrenado (.pt)
-MODEL_PATH = "./modelo-deteccion-placasv3-best.pt"
+MODEL_PATH = "./modelo-RPVv1-last.pt"
 
 # Cada cuantos segundos se toma 1 frame para analizar
-INTERVALO_SEGUNDOS = 0.01
+INTERVALO_SEGUNDOS = 0.005
 
 # Umbral minimo de confianza para considerar una deteccion valida (0.0 - 1.0)
-CONFIANZA_MINIMA = 0.5
+CONFIANZA_MINIMA = 0.3
 
 # Carpetas / archivos de salida (relativos a la ubicacion de este script)
 CARPETA_DATASET = "DATASET"
@@ -105,6 +105,8 @@ TAMANO_MAXIMO_COLA_OCR = 30
 # Regex de validacion para placas peruanas: ej. AYT-573
 PERU_PLATE_REGEX = re.compile(r"[A-Z0-9]{3}-?\d{3}")
 
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 # Whitelist de caracteres permitidos para Tesseract (mayusculas, digitos y guion)
 TESSERACT_CONFIG = (
     "--psm 11 "
@@ -117,7 +119,7 @@ TESSERACT_CONFIG = (
 FACTOR_ESCALA_ROI = 15
 
 # Angulo fijo de correccion de inclinacion, en grados (positivo = antihorario).
-ANGULO_ROTACION = 3
+ANGULO_ROTACION = 4
 
 
 # ============================ UTILIDADES DE RUTAS =============================
